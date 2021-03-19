@@ -1,6 +1,7 @@
 package ledger
 
 import (
+	"fmt"
 	"github.com/bakingbacon/hid"
 	"github.com/pkg/errors"
 	
@@ -75,5 +76,5 @@ func (l *Ledger) PrintDeviceInfo() {
 
 	fmt.Printf("Path: %s\nVID: %10d\nPID: %10d\nRelease: %10d\nUsagePage: %10d\nUsage: %10d\n" +
 		"Interface: %10d\nSerial: %s\nProduct: %s\nManuf: %s\n",
-		l.device.Path, l.device.VendorID, l.device.ProductID, l.device.Release, l.device.UsagePage, l.device.Usage, l.device.Interface, l.device.Serial, l.device.Product, l.device.Manufacturer)
+		l.Device.Path, l.Device.VendorID, l.Device.ProductID, l.Device.Release, l.Device.UsagePage, l.Device.Usage, l.Device.Interface, l.Device.Serial, l.Device.Product, l.Device.Manufacturer)
 }
