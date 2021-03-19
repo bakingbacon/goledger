@@ -1,4 +1,4 @@
-package ledger
+package tezos
 
 import (
 	"fmt"
@@ -12,25 +12,26 @@ const (
 	CUR_HASH = "b28c2364"
 )
 
-var ledger *Ledger
+var tledger *TezosLedger
 
 func TestMain(m *testing.M) {
 
 	var err error
 
 	// Get device
-	ledger, err = Get()
+	tledger, err = Get()
 	if err != nil {
 		fmt.Printf("Cannot get Ledger device: %s\n", err)
+		os.Exit(1)
 	}
-	defer ledger.Close()
+	defer tledger.Close()
 
 	os.Exit(m.Run())
 }
 
 func TestGetVersion(t *testing.T) {
 
-	ver, err := ledger.GetVersion()
+	ver, err := tledger.GetVersion()
 	if err != nil {
 		t.Errorf("Cannot get version: %s\n", err)
 	}
@@ -42,7 +43,7 @@ func TestGetVersion(t *testing.T) {
 
 func TestGetCommitHash(t *testing.T) {
 
-	commitHash, err := ledger.GetCommitHash()
+	commitHash, err := tledger.GetCommitHash()
 	if err != nil {
 		t.Errorf("Cannot get commit hash: %s\n", err)
 	}

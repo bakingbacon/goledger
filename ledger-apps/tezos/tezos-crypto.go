@@ -5,32 +5,33 @@ import (
 	"fmt"
 	"github.com/Messer4/base58check"
 	"github.com/pkg/errors"
-	ledger "github.com/bakingbacon/goledger"
+
+	goledger "github.com/bakingbacon/goledger"
 )
 
 // These variables are specific to the Tezos Ledger library. They are used
 // during the various B58 encode/decode processes for data returned from the device.
 var (
 	// For (de)constructing addresses
-	tz1prefix ledger.Prefix = []byte{6, 161, 159}
-	tz2prefix ledger.Prefix = []byte{6, 161, 161}
-	tz3prefix ledger.Prefix = []byte{6, 161, 164}
-	ktprefix  ledger.Prefix = []byte{2, 90, 121}
+	tz1prefix goledger.Prefix = []byte{6, 161, 159}
+	tz2prefix goledger.Prefix = []byte{6, 161, 161}
+	tz3prefix goledger.Prefix = []byte{6, 161, 164}
+	ktprefix  goledger.Prefix = []byte{2, 90, 121}
 
-	edskprefix  ledger.Prefix = []byte{43, 246, 78, 7}
-	edsigprefix ledger.Prefix = []byte{9, 245, 205, 134, 18}
-	sigprefix   ledger.Prefix = []byte{4, 130, 43}
+	edskprefix  goledger.Prefix = []byte{43, 246, 78, 7}
+	edsigprefix goledger.Prefix = []byte{9, 245, 205, 134, 18}
+	sigprefix   goledger.Prefix = []byte{4, 130, 43}
 
-	edsk2prefix ledger.Prefix = []byte{13, 15, 58, 7}
-	edpkprefix  ledger.Prefix = []byte{13, 15, 37, 217}
-	edeskprefix ledger.Prefix = []byte{7, 90, 60, 179, 41}
+	edsk2prefix goledger.Prefix = []byte{13, 15, 58, 7}
+	edpkprefix  goledger.Prefix = []byte{13, 15, 37, 217}
+	edeskprefix goledger.Prefix = []byte{7, 90, 60, 179, 41}
 
-	branchprefix      ledger.Prefix = []byte{1, 52}
-	chainidprefix     ledger.Prefix = []byte{57, 52, 00}
-	blockprefix       ledger.Prefix = []byte{1}
-	endorsementprefix ledger.Prefix = []byte{2}
-	genericopprefix   ledger.Prefix = []byte{3}
-	networkprefix     ledger.Prefix = []byte{87, 82, 0}
+	branchprefix      goledger.Prefix = []byte{1, 52}
+	chainidprefix     goledger.Prefix = []byte{57, 52, 00}
+	blockprefix       goledger.Prefix = []byte{1}
+	endorsementprefix goledger.Prefix = []byte{2}
+	genericopprefix   goledger.Prefix = []byte{3}
+	networkprefix     goledger.Prefix = []byte{87, 82, 0}
 )
 
 // SignOperationOutput contains an operation with the signature appended, and the signature
@@ -84,7 +85,7 @@ func (t *TezosLedger) SignTransaction(trxBytes string) (SignOperationOutput, err
 	return t.signGeneric(genericopprefix, trxBytes, "")
 }
 
-func (t *TezosLedger) signGeneric(opPrefix ledger.Prefix, incOpHex, chainID string) (SignOperationOutput, error) {
+func (t *TezosLedger) signGeneric(opPrefix goledger.Prefix, incOpHex, chainID string) (SignOperationOutput, error) {
 
 	// Base bytes of operation; all ops begin with prefix
 	var opBytes = opPrefix
@@ -92,7 +93,7 @@ func (t *TezosLedger) signGeneric(opPrefix ledger.Prefix, incOpHex, chainID stri
 	if chainID != "" {
 
 		// Strip off the network watermark (prefix), and then base58 decode the chain id string (ie: NetXUdfLh6Gm88t)
-		chainIdBytes := ledger.B58cdecode(chainID, networkprefix)
+		chainIdBytes := goledger.B58cdecode(chainID, networkprefix)
 		//fmt.Println("ChainIDByt: ", chainIdBytes)
 		//fmt.Println("ChainIDHex: ", hex.EncodeToString(chainIdBytes))
 
@@ -136,10 +137,10 @@ func (t *TezosLedger) signGeneric(opPrefix ledger.Prefix, incOpHex, chainID stri
 func pkhFromPkBytes(pk []byte) (string, error) {
 
 	// PKH needs only 20 byte buffer
-	pkh, err := ledger.Blake2b(pk, 20)
+	pkh, err := goledger.Blake2b(pk, 20)
 	if err != nil {
 		return "", err
 	}
 
-	return ledger.B58cencode(pkh, tz1prefix), nil
+	return goledger.B58cencode(pkh, tz1prefix), nil
 }
