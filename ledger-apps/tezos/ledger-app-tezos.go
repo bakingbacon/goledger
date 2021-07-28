@@ -6,7 +6,7 @@ package tezos
 
 import (
 	"encoding/binary"
-	_"encoding/hex"
+	_ "encoding/hex"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -34,6 +34,7 @@ const (
 var (
 	TEZOS_CHANNEL = []byte{1, 1}
 
+	ErrLengthZero     = errors.New("Returned no data")
 	ErrLengthMismatch = errors.New("Returned data length mismatch")
 	ErrDecodeLength   = errors.New("Unable to decode length")
 )
@@ -156,13 +157,20 @@ func (l *TezosLedger) getKey(ins uint8) (string, string, error) {
 	}
 
 	// First byte is length info
-	respLength, bRead := binary.Uvarint(resp[:1])
+	_respLength, bRead := binary.Uvarint(resp[:1])
 	if bRead != 1 {
 		return "", "", ErrDecodeLength
 	}
+	respLength := int(_respLength)  // Convert from uint64
 
-	if int(respLength) != len(resp[1:]) {
+	// Check if lengths match what ledger tells us
+	if respLength != len(resp[1:]) {
 		return "", "", ErrLengthMismatch
+	}
+
+	// Nothing returned? Bail
+	if respLength == 0 {
+		return "", "", ErrLengthZero
 	}
 
 	// No idea what the 0x02 value at resp[1] is for, but definitely
@@ -444,18 +452,18 @@ func (l *TezosLedger) SignBytes(bytesToSign []byte) (string, error) {
 
 	_, err := l.Write(signingApdu, TEZOS_CHANNEL)
 	if err != nil {
-		return "", errors.Wrap(err, "Unable to sign endorsement (1)")
+		return "", errors.Wrap(err, "Unable to sign bytes (1)")
 	}
 
 	resp, err := l.Read(TEZOS_CHANNEL)
 	if err != nil {
-		return "", errors.Wrap(err, "Unable to read endorsing signature (1)")
+		return "", errors.Wrap(err, "Unable to read bytes signature (1)")
 	}
 	//fmt.Println("S1_RESP:", resp)
 	//fmt.Println()
 
 	// Part 2
-	endorsementApdu := &TzApdu{
+	signBytesApdu := &TzApdu{
 		SignBytes,
 		0x81,
 		0x00,
@@ -466,14 +474,14 @@ func (l *TezosLedger) SignBytes(bytesToSign []byte) (string, error) {
 		return "", errors.Wrap(err, "Could not set non-blocking")
 	}
 
-	_, err = l.Write(endorsementApdu, TEZOS_CHANNEL)
+	_, err = l.Write(signBytesApdu, TEZOS_CHANNEL)
 	if err != nil {
-		return "", errors.Wrap(err, "Unable to sign endorsement (2)")
+		return "", errors.Wrap(err, "Unable to sign bytes (2)")
 	}
 
 	resp, err = l.Read(TEZOS_CHANNEL)
 	if err != nil {
-		return "", errors.Wrap(err, "Unable to read endorsing signature")
+		return "", errors.Wrap(err, "Unable to read bytes signature")
 	}
 
 	if r, err := l.Dev.SetNonBlocking(true); r == -1 {

@@ -34,7 +34,7 @@ func Get(vendorId, productId, interfaceNumber, usagePage uint16) (*Ledger, error
 	}
 
 	if tempDevice.Path == "" {
-		return nil, errors.New("Ledger plugged in? Unlocked? Correct app open?")
+		return nil, errors.New("Ledger plugged in? Unlocked?")
 	}
 	
 	// open device

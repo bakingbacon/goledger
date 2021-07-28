@@ -2,7 +2,9 @@ package ledger
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
+	_ "encoding/hex"
 	"fmt"
 	"time"
 
@@ -64,6 +66,9 @@ func (l *Ledger) Read(channel []byte) ([]byte, error) {
 	// Helper function for reading 64 byte responses
 	readData := func() ([]byte, error) {
 
+		ctx, cancel := context.WithTimeout(context.Background(), 50 * time.Second)
+		defer cancel()
+
 		var err error
 		var r = make([]byte, 64)
 
@@ -80,7 +85,12 @@ func (l *Ledger) Read(channel []byte) ([]byte, error) {
 			
 			// If no bytes read, sleep  and repeat
 			if b == 0 {
-				<-time.After(100 * time.Millisecond)
+				select{
+				case <-ctx.Done():
+					return nil, errors.New("Timeout Expired")
+				case <-time.After(100 * time.Millisecond):
+					continue
+				}
 			}
 		}
 		
@@ -217,13 +227,13 @@ func (l *Ledger) unwrapResponseAPDU(channel []byte, data []byte, packetSize int)
 	if len(data) == 0 || (len(data) < 5 + extraHeaderSize + 5) {
 		return nil, errors.New("No data")
 	}
-	
+
 	// Unpack channel and compare
 	packedChannel := data[offset:offset+2]
 	if bytes.Compare(packedChannel, channel) != 0 {
 		return nil, errors.New("Invalid channel")
 	}
-	
+
 	offset = offset + 2
 
 	// Check tag
@@ -331,7 +341,7 @@ func checkFailure(code int) error {
 		case 0x6985:
 			return errors.New("Operation denied by the user")
 		case 0x6a80:
-			return errors.New("Invalid data received")
+			return errors.New("Level is below safety watermark")
 		case 0x6a84:
 		case 0x6a85:
 			return errors.New("Not enough space?")
